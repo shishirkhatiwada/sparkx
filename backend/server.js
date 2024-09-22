@@ -2,11 +2,13 @@ import express, { urlencoded } from "express"
 import authRoute from "./routes/auth.route.js"
 import dotenv from "dotenv"
 import connectionMongoose from "./db/connection.js"
+import cookieParser from "cookie-parser"
 
 const app = express()
 dotenv.config()
 
 app.use(express.json())
+app.use(cookieParser())
 
 app.use(express.urlencoded({extended:true}))
 

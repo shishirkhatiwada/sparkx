@@ -65,13 +65,50 @@ export const register = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-    res.json({
-        data: "this is login"
-    });
+    try{
+        const {username, password} = req.body
+        const user = await User.findOne({username})
+
+        const isCorrest = await bcrypt.compare(password, user?.password || "")
+
+        if(!user || !password ){
+            return res.status(400).json({error: "Either Username or password is not correst"})
+        }
+
+        generateTokenAndSetCookie(user._id, res); // Assuming generateTokenAndSetCookie is defined elsewhere
+            res.status(200).json({
+                 _id: user._id,
+                fullname: user.fullname,
+                username: user.username,  // Fixed typo from useename to username
+                email: user.email,
+                followers: user.followers,
+                following: user.following,
+                profileImg: user.profileImg,
+                coverImg: user.coverImg
+        })
+    }
+    catch (error) {
+        console.error("Error in sign up controller:", error);  // More specific error logging
+        return res.status(500).json({ error: "Something went wrong on the server" });
+    }
 };
 
 export const logout = async (req, res) => {
-    res.json({
-        data: "this is register"
-    });
+    try{
+        res.cookie("accessToken", "", {maxAge: 0})
+        res.status(200).json({data: "Loggedout successfully"})
+    } catch(error){
+        console.error("Error while logging out:", error);  // More specific error logging
+        return res.status(500).json({ error: "Something went wrong on the server" });
+    }
 };
+
+export const getMe = async (req,res)=>{
+    try{
+        const user = await User.findOne(req.user._id).select("-password")
+        res.status(200).json(user)
+    }
+    catch(error){
+        console.error("Error while getting user:", error);  // More specific error logging
+        return res.status(500).json({ error: "Something went wrong on the server" });    }
+}
