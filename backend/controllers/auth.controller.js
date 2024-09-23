@@ -65,33 +65,40 @@ export const register = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-    try{
-        const {username, password} = req.body
-        const user = await User.findOne({username})
+    try {
+        const { username, password } = req.body;
 
-        const isCorrest = await bcrypt.compare(password, user?.password || "")
+        // Check if the user exists first
+        const user = await User.findOne({ username });
 
-        if(!user || !password ){
-            return res.status(400).json({error: "Either Username or password is not correst"})
+        if (!user) {
+            return res.status(400).json({ error: "Username not found" });
         }
 
-        generateTokenAndSetCookie(user._id, res); // Assuming generateTokenAndSetCookie is defined elsewhere
-            res.status(200).json({
-                 _id: user._id,
-                fullname: user.fullname,
-                username: user.username,  // Fixed typo from useename to username
-                email: user.email,
-                followers: user.followers,
-                following: user.following,
-                profileImg: user.profileImg,
-                coverImg: user.coverImg
-        })
-    }
-    catch (error) {
-        console.error("Error in sign up controller:", error);  // More specific error logging
+        // Now check if the password is correct
+        const isCorrect = await bcrypt.compare(password, user.password);
+        if (!isCorrect) {
+            return res.status(400).json({ error: "Incorrect password" });
+        }
+
+        generateTokenAndSetCookie(user._id, res); 
+
+        return res.status(200).json({
+            _id: user._id,
+            fullname: user.fullname,
+            username: user.username, 
+            email: user.email,
+            followers: user.followers,
+            following: user.following,
+            profileImg: user.profileImg,
+            coverImg: user.coverImg
+        });
+    } catch (error) {
+        console.error("Error in login controller:", error);  // More specific error logging
         return res.status(500).json({ error: "Something went wrong on the server" });
     }
 };
+
 
 export const logout = async (req, res) => {
     try{
